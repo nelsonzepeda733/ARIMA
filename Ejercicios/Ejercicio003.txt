@@ -1,0 +1,27 @@
+miSerie = arima.sim(list(order = c(1,1,1), ar=0.5, ma=0.6), sd=1.55, n = 730)
+plot(miSerie)
+
+dms=diff(miSerie)
+plot(dms)
+
+par(mfrow=c(1,2))
+acf(dms)
+pacf(dms)
+
+ajuste=arima(miSerie,order=c(1,1,1))
+ajuste
+
+tsdiag(ajuste)
+
+#Comparando con autoarima
+
+library(forecast)
+ajuste2=auto.arima(miSerie)
+ajuste2
+
+
+predict(ajuste,n.ahead=12)
+
+forecast(ajuste)
+	
+plot(forecast(ajuste))

@@ -1,0 +1,63 @@
+RawData=scan('http://www.diegocalvo.es/wp-content/uploads/2016/09/datos-serie-temporal.txt')
+plot(RawData)
+
+tsData = ts(RawData, start = c(1966,1), frequency = 12)
+print(tsData)
+plot(tsData)
+
+componentes.ts = decompose(tsData)
+plot(componentes.ts)
+
+#prueba de raíz unitaria
+library("fUnitRoots")
+urkpssTest(tsData, type = c("tau"), lags = c("short"),use.lag = NULL, doplot = TRUE)
+
+tsstationary = diff(tsData, differences=1)
+plot(tsstationary)
+
+acf(tsData,lag.max=140)
+
+timeseriesseasonallyadjusted <- tsData-componentes.ts$seasonal
+tsstationary <- diff(timeseriesseasonallyadjusted, differences=1)
+
+plot(tsstationary)
+
+acf(tsstationary, lag.max=140)
+
+fitARIMA <- arima(tsData, order=c(1,1,1),seasonal = list(order = c(1,0,0), period = 12),method="ML")
+#install.packages("lmtest")
+library(lmtest)
+
+
+#el método se refiere al método de ajuste, que puede ser “probabilidad máxima (ML)” o 
+#“minimizar la suma de cuadrados condicional (CSS)”. 
+#El valor predeterminado es la suma de cuadrados condicional.
+
+library(forecast)
+auto.arima(tsData, trace=TRUE)
+
+predict(fitARIMA,n.ahead = 5)
+
+futurVal <- forecast(fitARIMA,h=10, level=c(99.5))
+plot(futurVal)
+
+
+#Intentando en otro
+fitARIMA <- arima(tsData, order=c(0,1,1),seasonal = list(order = c(0,0,1), period = 12),method="ML")
+predict(fitARIMA,n.ahead = 5)
+futurVal <- forecast(fitARIMA,h=10, level=c(99.5))
+plot(futurVal)
+
+
+
+#Best model: ARIMA(2,0,0)(0,1,2)
+
+fitARIMA <- arima(tsData, order=c(2,0,0),seasonal = list(order = c(0,1,2), period = 12),method="ML")
+predict(fitARIMA,n.ahead = 5)
+futurVal <- forecast(fitARIMA,h=10, level=c(99.5))
+plot(futurVal)
+
+
+fitARIMA <- Arima(tsData, order=c(2,0,0),seasonal = list(order = c(0,1,2), period = 12),method="ML", include.drift = TRUE)
+futurVal <- forecast(fitARIMA,h=10, level=c(99.5))
+plot(futurVal)

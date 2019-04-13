@@ -1,0 +1,31 @@
+#Ejercicio publicado en https://www.doctormetrics.com/2017/04/27/introduccion-al-forecasting-con-r-statistics/#.XK_4s5gzbIW
+#colección de la progresión de pasajeros mensuales de Pan Am entre 1949-1960.
+#predicción con la libreria forecast
+library(forecast)
+df_arima <- ts(AirPassengers, frequency = 12, start = c(1949, 1), end = c(1958, 12))
+model <- forecast::auto.arima(df_arima)
+m.forecast <- forecast::forecast(model, h = 24)
+
+#predicción con la libreria prophet Lanzado por Facebook basándose en un modelo propio 
+library(prophet)
+df_prophet = data.frame(seq(as.Date("1949-01-01"), as.Date("1958-12-01"), "months"), df_arima)
+names(df_prophet) = c("ds", "y")
+m = prophet(df_prophet)
+future_df_prophet = make_future_dataframe(m, periods = 24, freq = 'months')
+prophet.forecast = predict (m, future_df_prophet)
+plot(m, prophet.forecast)
+prophet_plot_components(m, prophet.forecast)
+
+#transforma el output del modelo en un dataframe con toda la información: fecha, valor real, valor ajustado, 
+library(ggfortify)
+fortify.forecast <- fortify(m.forecast, ts.connect = TRUE)
+names(fortify.forecast) <- c('ds', 'data', 'fitted', 'yhat', 'Lo.80', 'Hi.80', 'Lo.90', 'Hi.90')
+
+#Graficando
+library(ggplot2)
+ggplot(data = prophet.forecast, aes(x = as.Date(ds), y = yhat)) + #prophet
+geom_line(col = 'green') +
+geom_point(data = fortify.forecast, aes(x=ds, y=data) ,col='black') +
+geom_line(data = fortify.forecast, aes(x=ds, y= fitted), color='blue') +
+geom_line(data = fortify.forecast, aes(x=ds, y= yhat), color='blue') +
+geom_ribbon(data = fortify.forecast, aes(x=ds, ymin = Lo.80, ymax = Hi.80), fill = 'skyblue4', alpha=0.3)
